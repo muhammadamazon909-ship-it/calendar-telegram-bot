@@ -1,33 +1,30 @@
-import requests
-import datetime
-from ics import Calendar
 import os
+import requests
+from ics import Calendar
 
-ICS_URL = os.environ['https://outlook.office365.com/owa/calendar/b1d8e10321234c0099743ee75eaaf2a6@ulaval.ca/567e88c0dd24451f9a648230fc845e8b14931969559727039684/calendar.ics']
-BOT_TOKEN = os.environ['8548811509:AAEpWt0jmSJ0CyIy4E0dLLPwjVtwT8-Y42c']
-CHAT_ID = os.environ['8548811509']
+# Get secrets from GitHub
+ICS_URL = os.environ.get("ICS_URL")
+BOT_TOKEN = os.environ.get("BOT_TOKEN")
+CHAT_ID = os.environ.get("CHAT_ID")
 
-def get_events():
-    c = Calendar(requests.get(ICS_URL).text)
-    today = datetime.date.today()
-    events_today = []
+# Fetch calendar
+response = requests.get(ICS_URL)
+calendar = Calendar(response.text)
 
-    for e in c.events:
-        if e.begin.date() == today:
-            time = e.begin.strftime('%H:%M')
-            events_today.append(f"• {e.name} at {time}")
+# Get next event
+events = sorted(calendar.events)
 
-    return events_today
-
-def send_message(text):
-    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-    requests.post(url, data={"chat_id": CHAT_ID, "text": text})
-
-events = get_events()
-
-if events:
-    msg = "📅 Your tasks today:\n\n" + "\n".join(events)
+if not events:
+    message = "No upcoming events found."
 else:
-    msg = "✅ No tasks today!"
+    event = list(events)[0]
+    message = f"📅 Next Event:\n{event.name}\n🕒 {event.begin}"
 
-send_message(msg)
+# Send message to Telegram
+url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+data = {
+    "chat_id": CHAT_ID,
+    "text": message
+}
+
+requests.post(url, data=data)
