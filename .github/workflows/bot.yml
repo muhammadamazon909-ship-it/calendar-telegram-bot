@@ -1,7 +1,7 @@
 name: Telegram Calendar Bot
 
 on:
-  workflow_dispatch:   # allows manual run
+  workflow_dispatch:
 
 jobs:
   run-bot:
@@ -17,7 +17,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install requests icalendar
+        run: pip install requests ics
 
       - name: Run script
         env:
